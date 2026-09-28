@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>2027 Health Insurance Premium Increases by State</title>
+<style>
+:root {
+  --bg: #f5f4f0; --card: #ffffff; --text: #2c2c2a; --muted: #5f5e5a;
+  --border: rgba(0,0,0,0.09); --tip-bg: rgba(22,22,20,0.92); --tip-text: #f0ede4;
+  --teal: #1D9E75; --amber: #EF9F27; --coral: #D85A30;
+  --teal-text: #fff; --amber-text: #412402; --coral-text: #fff;
+  --teal-dark: #085041; --amber-dark: #633806; --coral-dark: #711e0f;
+  --teal-dark-text: #9FE1CB; --amber-dark-text: #FAC775; --coral-dark-text: #F5C4B3;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1b1b19; --card: #26261f; --text: #e8e6de; --muted: #9c9a92; --border: rgba(255,255,255,0.08); }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); padding: 16px; min-height: 100vh; }
+.card { background: var(--card); border-radius: 14px; padding: 20px 20px 18px; max-width: 740px; margin: 0 auto; border: 1px solid var(--border); }
+h1 { font-size: 18px; font-weight: 600; margin-bottom: 3px; line-height: 1.3; }
+.sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+.stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.stat { flex: 1; min-width: 110px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.stat-n { font-size: 20px; font-weight: 700; }
+.stat-l { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.green { color: var(--teal); } .amber { color: var(--amber); } .red { color: var(--coral); }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-bottom: 14px; }
+.leg { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+.sw { width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0; }
+.grid-wrap { position: relative; width: 100%; }
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  gap: 3px;
+  width: 100%;
+  aspect-ratio: 11/9;
+}
+.tile {
+  border-radius: 5px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: opacity .12s, transform .1s;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+.tile:hover { opacity: .78; transform: scale(1.07); z-index: 10; }
+.tile-abbr { font-size: clamp(7px, 1.5vw, 13px); font-weight: 700; line-height: 1.1; }
+.tile-rate { font-size: clamp(5px, 1.1vw, 10px); line-height: 1; margin-top: 1px; opacity: .9; }
+.final-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.6); position: absolute; top: 3px; right: 3px; }
+.final-dot.dark-dot { background: rgba(0,0,0,0.3); }
+#tip {
+  position: fixed; background: var(--tip-bg); color: var(--tip-text);
+  padding: 8px 11px; border-radius: 8px; font-size: 12px;
+  pointer-events: none; display: none; line-height: 1.6;
+  white-space: nowrap; z-index: 999; box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+.note { font-size: 10.5px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--border); padding-top: 11px; margin-top: 14px; }
+.note a { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>2027 health insurance premium increases by state</h1>
+  <p class="sub">ACA individual market rate filings — best available state-level proxy for small-group trends &nbsp;·&nbsp; National small-group median: <strong>+14%</strong> (KFF, Aug. 2026) &nbsp;·&nbsp; Hover any state for details &nbsp;·&nbsp; White dot = rate finalized by regulators</p>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-n green" id="c1">8</div><div class="stat-l">States at ≤ 10%</div></div>
+    <div class="stat"><div class="stat-n amber" id="c2">30</div><div class="stat-l">States 10–20%</div></div>
+    <div class="stat"><div class="stat-n red" id="c3">12</div><div class="stat-l">States above 20%</div></div>
+    <div class="stat"><div class="stat-n" id="c4">14%</div><div class="stat-l">Small-group national median</div></div>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="sw" style="background:var(--teal)"></div>≤ 10% — relative relief</div>
+    <div class="leg"><div class="sw" style="background:var(--amber)"></div>10–20% — double-digit increase</div>
+    <div class="leg"><div class="sw" style="background:var(--coral)"></div>> 20% — severe increase</div>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="tile-grid" id="grid"></div>
+  </div>
+
+  <p class="note">
+    <strong>Sources:</strong> healthinsurance.org state rate tracker (updated Sep. 25, 2026); KFF / Peterson-KFF Health System Tracker (Aug. 2026); state insurance department filings via RateReview.HealthCare.gov. <strong>Note:</strong> Data reflects individual ACA market filings used as a proxy — state-level small-group filings are not published with comparable detail. KFF reports national small-group median of +14%, with 59% of insurers in the 10–20% range. Some rates are finalized (indicated by white dot); others remain proposed pending state review. Colorado finalized at +10.0%. Rate shown is the weighted average increase before any subsidies.
+  </p>
+</div>
+
+<div id="tip"></div>
+
+<script>
+const DATA = {
+  AL:{name:'Alabama',rate:25.0,fin:false}, AK:{name:'Alaska',rate:22.9,fin:false},
+  AZ:{name:'Arizona',rate:29.0,fin:false}, AR:{name:'Arkansas',rate:7.6,fin:false},
+  CA:{name:'California',rate:9.9,fin:false}, CO:{name:'Colorado',rate:10.0,fin:true},
+  CT:{name:'Connecticut',rate:11.2,fin:true}, DE:{name:'Delaware',rate:16.5,fin:true},
+  FL:{name:'Florida',rate:15.9,fin:false}, GA:{name:'Georgia',rate:20.7,fin:false},
+  HI:{name:'Hawaii',rate:11.1,fin:true}, ID:{name:'Idaho',rate:13.0,fin:false},
+  IL:{name:'Illinois',rate:14.1,fin:false}, IN:{name:'Indiana',rate:17.5,fin:true},
+  IA:{name:'Iowa',rate:6.7,fin:false}, KS:{name:'Kansas',rate:24.2,fin:false},
+  KY:{name:'Kentucky',rate:18.7,fin:false}, LA:{name:'Louisiana',rate:18.1,fin:true},
+  ME:{name:'Maine',rate:14.8,fin:true}, MD:{name:'Maryland',rate:14.6,fin:true},
+  MA:{name:'Massachusetts',rate:10.8,fin:true}, MI:{name:'Michigan',rate:14.2,fin:false},
+  MN:{name:'Minnesota',rate:11.9,fin:false}, MS:{name:'Mississippi',rate:21.8,fin:false},
+  MO:{name:'Missouri',rate:12.5,fin:false}, MT:{name:'Montana',rate:22.6,fin:true},
+  NE:{name:'Nebraska',rate:13.3,fin:false}, NV:{name:'Nevada',rate:18.8,fin:true},
+  NH:{name:'New Hampshire',rate:18.4,fin:false}, NJ:{name:'New Jersey',rate:20.4,fin:false},
+  NM:{name:'New Mexico',rate:24.4,fin:true}, NY:{name:'New York',rate:6.0,fin:true},
+  NC:{name:'North Carolina',rate:14.9,fin:false}, ND:{name:'North Dakota',rate:19.2,fin:false},
+  OH:{name:'Ohio',rate:10.7,fin:false}, OK:{name:'Oklahoma',rate:20.2,fin:false},
+  OR:{name:'Oregon',rate:21.6,fin:true}, PA:{name:'Pennsylvania',rate:16.0,fin:true},
+  RI:{name:'Rhode Island',rate:20.1,fin:false}, SC:{name:'South Carolina',rate:16.6,fin:false},
+  SD:{name:'South Dakota',rate:10.4,fin:true}, TN:{name:'Tennessee',rate:12.7,fin:false},
+  TX:{name:'Texas',rate:13.1,fin:false}, UT:{name:'Utah',rate:6.7,fin:true},
+  VT:{name:'Vermont',rate:3.0,fin:true}, VA:{name:'Virginia',rate:19.0,fin:false},
+  WA:{name:'Washington',rate:22.2,fin:true}, WV:{name:'West Virginia',rate:18.3,fin:false},
+  WI:{name:'Wisconsin',rate:21.1,fin:false}, WY:{name:'Wyoming',rate:11.3,fin:false}
+};
+
+// [abbr, col(1-based), row(1-based)]
+const TILES = [
+  ['ME',11,1],
+  ['VT',10,2],['NH',11,2],
+  ['WA',1,3],['MT',2,3],['ND',3,3],['MN',4,3],['WI',5,3],['MI',7,3],['NY',9,3],['MA',10,3],
+  ['OR',1,4],['ID',2,4],['SD',3,4],['IA',4,4],['IL',5,4],['IN',6,4],['OH',7,4],['PA',8,4],['NJ',9,4],['CT',10,4],['RI',11,4],
+  ['CA',1,5],['NV',2,5],['WY',3,5],['NE',4,5],['MO',5,5],['KY',6,5],['WV',7,5],['VA',8,5],['MD',9,5],['DE',10,5],
+  ['UT',2,6],['CO',3,6],['KS',4,6],['AR',5,6],['TN',6,6],['NC',7,6],['SC',8,6],
+  ['AZ',2,7],['NM',3,7],['OK',4,7],['LA',5,7],['MS',6,7],['AL',7,7],['GA',8,7],
+  ['TX',4,8],['FL',8,8],
+  ['HI',1,9],['AK',2,9]
+];
+
+function getColor(rate, dark) {
+  const d = document.documentElement;
+  const cs = getComputedStyle(d);
+  if (rate <= 10) return dark
+    ? {bg: cs.getPropertyValue('--teal-dark').trim(), txt: cs.getPropertyValue('--teal-dark-text').trim(), dot: false}
+    : {bg: cs.getPropertyValue('--teal').trim(), txt: '#fff', dot: false};
+  if (rate <= 20) return dark
+    ? {bg: cs.getPropertyValue('--amber-dark').trim(), txt: cs.getPropertyValue('--amber-dark-text').trim(), dot: true}
+    : {bg: cs.getPropertyValue('--amber').trim(), txt: cs.getPropertyValue('--amber-text').trim(), dot: true};
+  return dark
+    ? {bg: cs.getPropertyValue('--coral-dark').trim(), txt: cs.getPropertyValue('--coral-dark-text').trim(), dot: false}
+    : {bg: cs.getPropertyValue('--coral').trim(), txt: '#fff', dot: false};
+}
+
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const grid = document.getElementById('grid');
+const tip = document.getElementById('tip');
+
+TILES.forEach(([abbr, col, row]) => {
+  const info = DATA[abbr];
+  if (!info) return;
+  const {bg, txt, dot} = getColor(info.rate, isDark);
+  const div = document.createElement('div');
+  div.className = 'tile';
+  div.style.gridColumn = col;
+  div.style.gridRow = row;
+  div.style.background = bg;
+  div.innerHTML = `
+    <span class="tile-abbr" style="color:${txt}">${abbr}</span>
+    <span class="tile-rate" style="color:${txt}">+${info.rate}%</span>
+    ${info.fin ? `<span class="final-dot${dot?' dark-dot':''}"></span>` : ''}
+  `;
+  div.addEventListener('mouseenter', e => {
+    tip.innerHTML = `<strong>${info.name}</strong> &nbsp;+${info.rate}%<br>${info.fin ? '✓ Finalized by regulators' : 'Proposed — pending review'}`;
+    tip.style.display = 'block';
+  });
+  div.addEventListener('mousemove', e => {
+    tip.style.left = (e.clientX + 12) + 'px';
+    tip.style.top  = (e.clientY - 46) + 'px';
+  });
+  div.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  grid.appendChild(div);
+});
+</script>
+</body>
+</html>
